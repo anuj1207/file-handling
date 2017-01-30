@@ -10,19 +10,19 @@ import scala.io.Source
   * Created by ANUJ and RAMANDEEP on 1/28/2017.
   */
 
-trait RWSource {
+trait ReadWriteSource {
 
   def ifExists(string: String):Boolean
 
-  def read(string: String):String
+  def read(path: String):String
 
-  def write(source: String,data: String):String
+  def write(destination: String,data: String):String
 
 }
 
-object SourceFile extends RWSource {
+object SourceFile extends ReadWriteSource {
 
-  override def ifExists(string: String) = Files.exists(Paths.get(string))
+  override def ifExists(path: String) = Files.exists(Paths.get(path))
 
   override def read(path:String) = {
     Source.fromFile(path).mkString
@@ -39,7 +39,7 @@ object SourceFile extends RWSource {
 
 trait ReadData {
 
-  val rwSource : RWSource
+  val rwSource : ReadWriteSource
 
   def reading(path: String):String = rwSource.read(path)
 
@@ -65,9 +65,9 @@ trait ReadData {
 
 }
 
-object RWFile extends ReadData {
+object ReadWriteFile extends ReadData {
 
-  override val rwSource: RWSource = SourceFile
+  override val rwSource: ReadWriteSource = SourceFile
 
   def getListOfFiles(dir: String):List[File] = {
     val d = new File(dir)
@@ -86,17 +86,17 @@ object ETL {
 
     val scan = new Scanner(System.in)
 
-    println("Enter a directory path to see the files in it")
+    println("Enter a directory path to see the files: ")
     val dirPath = scan.next()
-    val files = RWFile.getListOfFiles(dirPath)
-    println(s"List of Files:\n$files")
+    val files = ReadWriteFile.getListOfFiles(dirPath)
+    println(s"List of Files: \n$files")
 
-    println("Enter the file name with path to work on:")
+    println("Enter the file name with path to work on: ")
     val sourcePath = scan.next()
 
-    if(RWFile.rwSource.ifExists(sourcePath)){
+    if(ReadWriteFile.rwSource.ifExists(sourcePath)){
 
-      val data = RWFile.reading(sourcePath)
+      val data = ReadWriteFile.reading(sourcePath)
       println(s"Data Read from file: $sourcePath\n$data\n")
 
       val dataUpperCase = data.toUpperCase
@@ -104,23 +104,31 @@ object ETL {
 
       println("Enter file name with path to write to:")
       val destPath = scan.next()
-      println(s"writing capitalised data to destination path:$destPath\n${RWFile.writeCaps(destPath,data)}\n")
-
-      val uniqueWordString = RWFile.getUniqueWords(sourcePath)
-      println(s"Unique words in source file: \n$uniqueWordString\n")
-
-      val summary = RWFile.getWordCount(sourcePath)
-      println(s"Summary for word count:\n$summary\n")
-
-      println("Enter New Path including file name to write summary:")
-      val newPath = scan.next()
-      println(s"Writing summary to: $newPath  \n${RWFile.writing(newPath,summary)} \n")
+      println(s"writing capitalised data to destination path:$destPath \n ${ReadWriteFile.writeCaps(destPath,data)}\n")
 
     }
     else{
       println("File Not Found/Error 404")
     }
 
+    println("Enter the path with file name to find unique words")
+    val filePath = scan.next()
+    if(ReadWriteFile.rwSource.ifExists(filePath)){
+
+      val uniqueWordString = ReadWriteFile.getUniqueWords(sourcePath)
+      println(s"Unique words in source file: \n$uniqueWordString\n")
+
+      val summary = ReadWriteFile.getWordCount(sourcePath)
+      println(s"Summary for word count:\n$summary\n")
+
+      println("Enter New Path including file name to write summary:")
+      val newPath = scan.next()
+      println(s"Writing summary to: $newPath  \n${ReadWriteFile.writing(newPath,summary)} \n")
+
+    }
+    else{
+      println("File Not Found/Error 404")
+    }
   }
 
 }
